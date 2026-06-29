@@ -1,6 +1,6 @@
 const SHEET_NAME = "요청누적";
 const SPREADSHEET_ID = "1D46OIgSSAqfJmzwkWAPiFYKPnJyG32U_GXY9-6mfhgY";
-const ADMIN_EMAILS = ["담당자이메일@example.com"];
+const ADMIN_EMAILS = ["par0380@dge.go.kr"];
 
 function doPost(e) {
   const sheet = getSheet_();
@@ -24,7 +24,11 @@ function doPost(e) {
     data.userAgent || "",
   ]);
 
-  notifyAdmins_(data);
+  try {
+    notifyAdmins_(data);
+  } catch (error) {
+    console.error("알림 메일 발송 실패:", error);
+  }
 
   return ContentService
     .createTextOutput(JSON.stringify({ ok: true }))
