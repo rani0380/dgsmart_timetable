@@ -278,7 +278,7 @@ button {
 
 .content-grid {
   display: grid;
-  grid-template-columns: max-content minmax(320px, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   align-items: start;
   gap: 10px;
 }
@@ -291,6 +291,7 @@ button {
 }
 
 .schedule-panel {
+  min-width: 0;
   max-width: 100%;
 }
 
@@ -460,6 +461,7 @@ button {
   grid-template-columns: 1fr;
   align-content: start;
   gap: 10px;
+  min-width: 0;
 }
 
 .form-grid {
