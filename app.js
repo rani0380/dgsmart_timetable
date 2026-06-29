@@ -85,7 +85,6 @@ els.swapForm.addEventListener("submit", (event) => {
   els.reason.value = "";
   persistAndRender();
   appendRequestToGoogleSheet(request);
-  openPrintApplication(request);
 });
 
 els.selectedDate.addEventListener("change", () => {
