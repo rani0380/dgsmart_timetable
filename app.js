@@ -287,7 +287,7 @@ function renderLessonPreview(kind) {
   const lesson = getBaseLesson(teacherId, day, period);
   const teacher = teachers.find((item) => item.id === teacherId);
   const subject = teacher?.subject || "교과";
-  const title = lesson.status === "open" ? "공강" : `${subject} · ${lesson.title}`;
+  const title = lesson.status === "open" ? `${subject} · 공강` : `${subject} · ${lesson.title}`;
   const meta = lesson.className ? `${day}요일 ${period}교시 · ${lesson.className}` : `${day}요일 ${period}교시`;
 
   target.classList.toggle("open", lesson.status === "open");
