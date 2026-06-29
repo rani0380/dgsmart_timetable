@@ -30,6 +30,7 @@ const initialState = {
 };
 
 let state = normalizeState(loadState());
+let nextSchedulePick = "from";
 
 const els = {
   selectedDate: document.querySelector("#selectedDate"),
@@ -99,11 +100,17 @@ els.selectedDay.addEventListener("change", () => {
 });
 
 [els.fromTeacher, els.fromDay, els.fromPeriod].forEach((element) => {
-  element.addEventListener("change", () => renderLessonPreview("from"));
+  element.addEventListener("change", () => {
+    renderLessonPreview("from");
+    renderSchedule();
+  });
 });
 
 [els.toTeacher, els.toDay, els.toPeriod].forEach((element) => {
-  element.addEventListener("change", () => renderLessonPreview("to"));
+  element.addEventListener("change", () => {
+    renderLessonPreview("to");
+    renderSchedule();
+  });
 });
 
 els.newRequestBtn.addEventListener("click", () => {
@@ -212,7 +219,21 @@ function renderSchedule() {
       const isHidden = state.gradeFilter !== "all" && lesson.className && !lesson.className.startsWith(`${state.gradeFilter}-`);
       const div = document.createElement("div");
       div.className = `lesson ${lesson.status}`;
+      div.tabIndex = 0;
+      div.role = "button";
+      div.title = `${teacher.name} ${state.selectedDay}요일 ${period}교시를 신청서에 입력`;
+      div.dataset.teacherId = teacher.id;
+      div.dataset.day = state.selectedDay;
+      div.dataset.period = String(period);
+      div.addEventListener("click", () => selectScheduleSlot(teacher.id, state.selectedDay, period));
+      div.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        selectScheduleSlot(teacher.id, state.selectedDay, period);
+      });
       if (conflicts.has(`${teacher.id}-${state.selectedDay}-${period}`)) div.classList.add("conflict");
+      if (isSelectedScheduleSlot("from", teacher.id, state.selectedDay, period)) div.classList.add("selected-from");
+      if (isSelectedScheduleSlot("to", teacher.id, state.selectedDay, period)) div.classList.add("selected-to");
       if (isHidden) div.style.opacity = "0.25";
       div.append(makeText("strong", lesson.title), makeText("span", `${lesson.className || "배정 가능"} · ${lesson.note}`));
       cell.append(div);
@@ -221,6 +242,35 @@ function renderSchedule() {
 
     els.scheduleBody.append(row);
   }
+}
+
+function selectScheduleSlot(teacherId, day, period) {
+  const target = nextSchedulePick;
+  setRequestSlot(target, teacherId, day, period);
+  nextSchedulePick = target === "from" ? "to" : "from";
+  renderSchedule();
+  document.querySelector("#swapTitle").scrollIntoView({ behavior: "smooth", block: "center" });
+  showSync(target === "from" ? "요청 수업 자동 입력됨" : "교체 받을 수업 자동 입력됨");
+}
+
+function setRequestSlot(kind, teacherId, day, period) {
+  const isFrom = kind === "from";
+  const teacher = isFrom ? els.fromTeacher : els.toTeacher;
+  const daySelect = isFrom ? els.fromDay : els.toDay;
+  const periodSelect = isFrom ? els.fromPeriod : els.toPeriod;
+
+  teacher.value = teacherId;
+  daySelect.value = day;
+  periodSelect.value = String(period);
+  renderLessonPreview(kind);
+}
+
+function isSelectedScheduleSlot(kind, teacherId, day, period) {
+  const isFrom = kind === "from";
+  const selectedTeacher = isFrom ? els.fromTeacher.value : els.toTeacher.value;
+  const selectedDay = isFrom ? els.fromDay.value : els.toDay.value;
+  const selectedPeriod = Number(isFrom ? els.fromPeriod.value : els.toPeriod.value);
+  return selectedTeacher === teacherId && selectedDay === day && selectedPeriod === period;
 }
 
 function renderRequests() {
