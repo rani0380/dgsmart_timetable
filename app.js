@@ -36,7 +36,10 @@ const els = {
   selectedDay: document.querySelector("#selectedDay"),
   fromTeacher: document.querySelector("#fromTeacher"),
   toTeacher: document.querySelector("#toTeacher"),
-  period: document.querySelector("#period"),
+  fromDay: document.querySelector("#fromDay"),
+  fromPeriod: document.querySelector("#fromPeriod"),
+  toDay: document.querySelector("#toDay"),
+  toPeriod: document.querySelector("#toPeriod"),
   requestType: document.querySelector("#requestType"),
   reason: document.querySelector("#reason"),
   swapForm: document.querySelector("#swapForm"),
@@ -63,14 +66,18 @@ els.swapForm.addEventListener("submit", (event) => {
     status: "pending",
     fromTeacher: els.fromTeacher.value,
     toTeacher: els.toTeacher.value,
-    day: state.selectedDay,
-    period: Number(els.period.value),
+    day: els.fromDay.value,
+    period: Number(els.fromPeriod.value),
+    fromDay: els.fromDay.value,
+    fromPeriod: Number(els.fromPeriod.value),
+    toDay: els.toDay.value,
+    toPeriod: Number(els.toPeriod.value),
     reason: els.reason.value.trim() || "사유 미입력",
     createdAt: Date.now(),
   };
 
   state.requests.unshift(request);
-  pushActivity(`${teacherName(request.fromTeacher)} 교사가 ${teacherName(request.toTeacher)} 교사에게 ${request.day}요일 ${request.period}교시 ${typeLabel(request.type)}를 요청했습니다.`);
+  pushActivity(`${teacherName(request.fromTeacher)} ${request.fromDay}요일 ${request.fromPeriod}교시 → ${teacherName(request.toTeacher)} ${request.toDay}요일 ${request.toPeriod}교시 ${typeLabel(request.type)}를 요청했습니다.`);
   els.reason.value = "";
   persistAndRender();
   appendRequestToGoogleSheet(request);
@@ -139,8 +146,12 @@ function hydrateControls() {
 
   for (const day of days) {
     els.selectedDay.append(new Option(`${day}요일`, day));
+    els.fromDay.append(new Option(`${day}요일`, day));
+    els.toDay.append(new Option(`${day}요일`, day));
   }
   els.selectedDay.value = state.selectedDay;
+  els.fromDay.value = state.selectedDay;
+  els.toDay.value = state.selectedDay;
 
   for (const teacher of teachers) {
     const label = `${teacher.name} (${teacher.subject})`;
@@ -149,7 +160,8 @@ function hydrateControls() {
   }
 
   for (let period = 1; period <= 7; period += 1) {
-    els.period.append(new Option(`${period}교시`, period));
+    els.fromPeriod.append(new Option(`${period}교시`, period));
+    els.toPeriod.append(new Option(`${period}교시`, period));
   }
 
   if (teachers.length > 1) els.toTeacher.selectedIndex = 1;
@@ -228,7 +240,7 @@ function createRequestCard(request) {
   card.querySelector("strong").textContent = `${teacherName(request.fromTeacher)} → ${teacherName(request.toTeacher)}`;
   card.querySelector(".request-top span").textContent = typeLabel(request.type);
   card.querySelector("p").textContent = request.reason;
-  card.querySelector(".request-meta").textContent = `${request.day}요일 ${request.period}교시 · ${relativeTime(request.createdAt)}`;
+  card.querySelector(".request-meta").textContent = requestTimeLabel(request) + ` · ${relativeTime(request.createdAt)}`;
   const actions = card.querySelector(".request-actions");
 
   if (request.status === "pending") {
@@ -262,16 +274,25 @@ function renderMetrics() {
 
 function buildLesson(teacherId, period, approved) {
   const base = getBaseLesson(teacherId, state.selectedDay, period);
-  const related = approved.find((request) => request.period === period && (request.fromTeacher === teacherId || request.toTeacher === teacherId));
+  const related = approved.find((request) => {
+    const fromDay = request.fromDay || request.day;
+    const fromPeriod = request.fromPeriod || request.period;
+    const toDay = request.toDay || request.day;
+    const toPeriod = request.toPeriod || request.period;
+    return (
+      (request.fromTeacher === teacherId && fromDay === state.selectedDay && fromPeriod === period) ||
+      (request.toTeacher === teacherId && toDay === state.selectedDay && toPeriod === period)
+    );
+  });
 
   if (!related) return base;
 
-  if (related.toTeacher === teacherId) {
-    const fromBase = getBaseLesson(related.fromTeacher, state.selectedDay, period);
+  if (related.toTeacher === teacherId && (related.toDay || related.day) === state.selectedDay && (related.toPeriod || related.period) === period) {
+    const fromBase = getBaseLesson(related.fromTeacher, related.fromDay || related.day, related.fromPeriod || related.period);
     return {
       title: related.type === "coverage" ? `${fromBase.title} 보강` : `${fromBase.title} 교체`,
       className: fromBase.className,
-      note: `${teacherName(related.fromTeacher)} 요청 승인`,
+      note: `${teacherName(related.fromTeacher)} ${(related.fromDay || related.day)}${related.fromPeriod || related.period} 요청 승인`,
       status: "changed",
     };
   }
@@ -279,7 +300,7 @@ function buildLesson(teacherId, period, approved) {
   return {
     title: related.type === "coverage" ? "보강 배정됨" : "교체 승인됨",
     className: base.className,
-    note: `${teacherName(related.toTeacher)} 담당`,
+    note: `${teacherName(related.toTeacher)} ${(related.toDay || related.day)}${related.toPeriod || related.period} 담당`,
     status: "changed",
   };
 }
@@ -306,8 +327,10 @@ function detectConflicts(approved) {
   const busy = new Map();
   const conflicts = new Set();
   for (const request of approved) {
-    const key = `${request.toTeacher}-${request.day}-${request.period}`;
-    if (scheduleIndex.has(key) || busy.has(key)) conflicts.add(key);
+    const toDay = request.toDay || request.day;
+    const toPeriod = request.toPeriod || request.period;
+    const key = `${request.toTeacher}-${toDay}-${toPeriod}`;
+    if (toDay === state.selectedDay && (scheduleIndex.has(key) || busy.has(key))) conflicts.add(key);
     busy.set(key, true);
   }
   return conflicts;
@@ -318,7 +341,7 @@ function updateRequest(id, status) {
   if (!request) return;
   request.status = status;
   const statusText = { approved: "승인", rejected: "반려", pending: "대기 전환" }[status];
-  pushActivity(`${teacherName(request.fromTeacher)} → ${teacherName(request.toTeacher)} ${request.day}요일 ${request.period}교시 요청이 ${statusText}되었습니다.`);
+  pushActivity(`${teacherName(request.fromTeacher)} → ${teacherName(request.toTeacher)} ${requestTimeLabel(request)} 요청이 ${statusText}되었습니다.`);
   persistAndRender();
 }
 
@@ -337,12 +360,17 @@ async function appendRequestToGoogleSheet(request) {
     return;
   }
 
-  const baseLesson = getBaseLesson(request.fromTeacher, request.day, request.period);
+  const baseLesson = getBaseLesson(request.fromTeacher, request.fromDay || request.day, request.fromPeriod || request.period);
+  const targetLesson = getBaseLesson(request.toTeacher, request.toDay || request.day, request.toPeriod || request.period);
   const payload = {
     requestId: request.id,
     requestDate: state.selectedDate,
-    day: request.day,
-    period: request.period,
+    day: request.fromDay || request.day,
+    period: request.fromPeriod || request.period,
+    fromDay: request.fromDay || request.day,
+    fromPeriod: request.fromPeriod || request.period,
+    toDay: request.toDay || request.day,
+    toPeriod: request.toPeriod || request.period,
     type: request.type,
     typeLabel: typeLabel(request.type),
     status: request.status,
@@ -352,6 +380,8 @@ async function appendRequestToGoogleSheet(request) {
     toSubject: teacherSubject(request.toTeacher),
     originalClass: baseLesson.className,
     originalLesson: baseLesson.title,
+    targetClass: targetLesson.className,
+    targetLesson: targetLesson.title,
     reason: request.reason,
     createdAt: new Date(request.createdAt).toISOString(),
     userAgent: navigator.userAgent,
@@ -407,11 +437,23 @@ function loadState() {
 }
 
 function normalizeState(nextState) {
+  const requests = Array.isArray(nextState?.requests)
+    ? nextState.requests.map((request) => ({
+        ...request,
+        fromDay: request.fromDay || request.day || defaultDay,
+        fromPeriod: request.fromPeriod || request.period || 1,
+        toDay: request.toDay || request.day || defaultDay,
+        toPeriod: request.toPeriod || request.period || 1,
+        day: request.fromDay || request.day || defaultDay,
+        period: request.fromPeriod || request.period || 1,
+      }))
+    : [];
+
   return {
     ...structuredClone(initialState),
     ...nextState,
     selectedDay: days.includes(nextState?.selectedDay) ? nextState.selectedDay : defaultDay,
-    requests: Array.isArray(nextState?.requests) ? nextState.requests : [],
+    requests,
     activity: Array.isArray(nextState?.activity) ? nextState.activity : initialState.activity,
   };
 }
@@ -426,6 +468,14 @@ function teacherSubject(id) {
 
 function typeLabel(type) {
   return type === "coverage" ? "보강" : "교체";
+}
+
+function requestTimeLabel(request) {
+  const fromDay = request.fromDay || request.day;
+  const fromPeriod = request.fromPeriod || request.period;
+  const toDay = request.toDay || request.day;
+  const toPeriod = request.toPeriod || request.period;
+  return `${fromDay}요일 ${fromPeriod}교시 → ${toDay}요일 ${toPeriod}교시`;
 }
 
 function relativeTime(timestamp) {

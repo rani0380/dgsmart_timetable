@@ -437,6 +437,22 @@ button {
   grid-column: 1 / -1;
 }
 
+.form-section {
+  border-top: 1px solid var(--line);
+  color: var(--teal-strong);
+  font-size: 12px;
+  padding-top: 8px;
+}
+
+.form-section:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.form-section strong {
+  display: block;
+}
+
 .field.compact {
   min-width: 140px;
 }

@@ -129,17 +129,35 @@
                 </div>
               </div>
               <form id="swapForm" class="form-grid">
+                <div class="form-section full">
+                  <strong>요청 수업</strong>
+                </div>
                 <label class="field">
                   <span>요청 교사</span>
                   <select id="fromTeacher" required></select>
                 </label>
+                <label class="field half">
+                  <span>요일</span>
+                  <select id="fromDay" required></select>
+                </label>
+                <label class="field half">
+                  <span>교시</span>
+                  <select id="fromPeriod" required></select>
+                </label>
+                <div class="form-section full">
+                  <strong>교체 받을 수업</strong>
+                </div>
                 <label class="field">
                   <span>대상 교사</span>
                   <select id="toTeacher" required></select>
                 </label>
                 <label class="field half">
+                  <span>요일</span>
+                  <select id="toDay" required></select>
+                </label>
+                <label class="field half">
                   <span>교시</span>
-                  <select id="period" required></select>
+                  <select id="toPeriod" required></select>
                 </label>
                 <label class="field half">
                   <span>유형</span>
