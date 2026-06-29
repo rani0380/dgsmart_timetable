@@ -26,41 +26,11 @@ const HEADERS = [
 ];
 
 function doPost(e) {
-  const sheet = getSheet_();
   const data = parseRequest_(e);
-
-  sheet.appendRow([
-    new Date(),
-    data.requestId || "",
-    data.requestDate || "",
-    data.day || "",
-    data.period || "",
-    data.fromDay || data.day || "",
-    data.fromPeriod || data.period || "",
-    data.toDay || "",
-    data.toPeriod || "",
-    data.typeLabel || "",
-    data.status || "",
-    data.fromTeacher || "",
-    data.fromSubject || "",
-    data.toTeacher || "",
-    data.toSubject || "",
-    data.originalClass || "",
-    data.originalLesson || "",
-    data.targetClass || "",
-    data.targetLesson || "",
-    data.reason || "",
-    data.userAgent || "",
-  ]);
-
-  try {
-    notifyAdmins_(data);
-  } catch (error) {
-    console.error("알림 메일 발송 실패:", error);
-  }
+  appendRequest_(data);
 
   return ContentService
-    .createTextOutput(JSON.stringify({ ok: true }))
+    .createTextOutput(JSON.stringify({ ok: true, mode: "post" }))
     .setMimeType(ContentService.MimeType.JSON);
 }
 
@@ -95,7 +65,16 @@ function parseRequest_(e) {
   return {};
 }
 
-function doGet() {
+function doGet(e) {
+  if (e && e.parameter && e.parameter.payload) {
+    const data = parseRequest_(e);
+    appendRequest_(data);
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ ok: true, mode: "get" }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
   return ContentService
     .createTextOutput(JSON.stringify({
       ok: true,
@@ -104,6 +83,40 @@ function doGet() {
       sheetName: SHEET_NAME,
     }))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+function appendRequest_(data) {
+  const sheet = getSheet_();
+
+  sheet.appendRow([
+    new Date(),
+    data.requestId || "",
+    data.requestDate || "",
+    data.day || "",
+    data.period || "",
+    data.fromDay || data.day || "",
+    data.fromPeriod || data.period || "",
+    data.toDay || "",
+    data.toPeriod || "",
+    data.typeLabel || "",
+    data.status || "",
+    data.fromTeacher || "",
+    data.fromSubject || "",
+    data.toTeacher || "",
+    data.toSubject || "",
+    data.originalClass || "",
+    data.originalLesson || "",
+    data.targetClass || "",
+    data.targetLesson || "",
+    data.reason || "",
+    data.userAgent || "",
+  ]);
+
+  try {
+    notifyAdmins_(data);
+  } catch (error) {
+    console.error("알림 메일 발송 실패:", error);
+  }
 }
 
 function testAppendRequest_() {
