@@ -364,7 +364,7 @@ async function appendRequestToGoogleSheet(request) {
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify(payload),
     });
-    pushActivity("구글 시트로 요청 데이터를 전송했습니다.");
+    pushActivity("구글 시트로 요청 데이터 전송을 시도했습니다.");
     persistAndRender();
   } catch (error) {
     pushActivity("구글 시트 전송에 실패했습니다. 로컬에는 저장되어 있습니다.");

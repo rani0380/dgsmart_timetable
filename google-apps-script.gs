@@ -1,4 +1,5 @@
 const SHEET_NAME = "요청누적";
+const SPREADSHEET_ID = "1D46OIgSSAqfJmzwkWAPiFYKPnJyG32U_GXY9-6mfhgY";
 const ADMIN_EMAILS = ["담당자이메일@example.com"];
 
 function doPost(e) {
@@ -32,12 +33,40 @@ function doPost(e) {
 
 function doGet() {
   return ContentService
-    .createTextOutput(JSON.stringify({ ok: true, service: "DG Smart Timetable" }))
+    .createTextOutput(JSON.stringify({
+      ok: true,
+      service: "DG Smart Timetable",
+      spreadsheetId: SPREADSHEET_ID,
+      sheetName: SHEET_NAME,
+    }))
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+function testAppendRequest_() {
+  doPost({
+    postData: {
+      contents: JSON.stringify({
+        requestId: "TEST-" + new Date().getTime(),
+        requestDate: "2026-06-29",
+        day: "월",
+        period: 5,
+        typeLabel: "교체",
+        status: "pending",
+        fromTeacher: "테스트 요청교사",
+        fromSubject: "국어",
+        toTeacher: "테스트 대상교사",
+        toSubject: "수학",
+        originalClass: "1-1",
+        originalLesson: "16",
+        reason: "Apps Script 연결 테스트",
+        userAgent: "Apps Script test",
+      }),
+    },
+  });
+}
+
 function getSheet_() {
-  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
   let sheet = spreadsheet.getSheetByName(SHEET_NAME);
   if (!sheet) sheet = spreadsheet.insertSheet(SHEET_NAME);
 
