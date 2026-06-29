@@ -20,13 +20,7 @@ const initialState = {
   selectedDay: defaultDay,
   gradeFilter: "all",
   requests: [],
-  activity: [
-    {
-      id: crypto.randomUUID(),
-      text: `${sourceData.sourceFile || "엑셀 시간표"} 데이터를 불러왔습니다.`,
-      at: Date.now(),
-    },
-  ],
+  activity: [],
 };
 
 let state = normalizeState(loadState());
@@ -332,7 +326,7 @@ function createRequestCard(request) {
 
 function renderActivity() {
   els.activityList.replaceChildren();
-  for (const item of state.activity.slice(0, 6)) {
+  for (const item of state.activity.filter((entry) => !isDataLoadActivity(entry)).slice(0, 6)) {
     const li = document.createElement("li");
     li.append(makeText("strong", item.text), makeText("span", relativeTime(item.at)));
     els.activityList.append(li);
@@ -745,13 +739,22 @@ function normalizeState(nextState) {
       }))
     : [];
 
+  const activity = Array.isArray(nextState?.activity)
+    ? nextState.activity.filter((entry) => !isDataLoadActivity(entry))
+    : initialState.activity;
+
   return {
     ...structuredClone(initialState),
     ...nextState,
     selectedDay: days.includes(nextState?.selectedDay) ? nextState.selectedDay : defaultDay,
     requests,
-    activity: Array.isArray(nextState?.activity) ? nextState.activity : initialState.activity,
+    activity,
   };
+}
+
+function isDataLoadActivity(entry) {
+  const text = String(entry?.text || "");
+  return text.includes("데이터를 불러왔습니다") || text.includes("xlsx 데이터");
 }
 
 function teacherName(id) {
