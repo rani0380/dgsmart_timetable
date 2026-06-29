@@ -638,6 +638,11 @@ button {
   color: var(--red);
 }
 
+.request-actions .print {
+  border-color: #bfdbfe;
+  color: var(--blue);
+}
+
 @media (max-width: 1120px) {
   .app-shell {
     grid-template-columns: 1fr;
