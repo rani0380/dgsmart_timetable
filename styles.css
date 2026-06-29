@@ -39,6 +39,10 @@ button {
   cursor: pointer;
 }
 
+a.nav-item {
+  text-decoration: none;
+}
+
 .app-shell {
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr);
@@ -601,6 +605,18 @@ button {
 
 .planner-board {
   margin-top: 10px;
+}
+
+.ops-page .planner-board {
+  display: none;
+}
+
+.planner-page .planner-board {
+  margin-top: 0;
+}
+
+.planner-page .workspace {
+  max-width: 1500px;
 }
 
 .planner-actions {
