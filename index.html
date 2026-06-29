@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>교원 시간표 교체 및 보강</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="서비스 메뉴">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">T</span>
+          <div>
+            <strong>Timetable Hub</strong>
+            <span>실시간 교체·보강 관리</span>
+          </div>
+        </div>
+
+        <nav class="nav-list" aria-label="주요 화면">
+          <button class="nav-item active" type="button" data-view="board">
+            <span aria-hidden="true">▦</span>
+            운영 보드
+          </button>
+          <button class="nav-item" type="button" data-view="requests">
+            <span aria-hidden="true">↔</span>
+            교체 요청
+          </button>
+          <button class="nav-item" type="button" data-view="coverage">
+            <span aria-hidden="true">＋</span>
+            보강 배정
+          </button>
+          <button class="nav-item" type="button" data-view="audit">
+            <span aria-hidden="true">◎</span>
+            변경 기록
+          </button>
+        </nav>
+
+        <div class="sync-box">
+          <span class="pulse" aria-hidden="true"></span>
+          <div>
+            <strong>실시간 동기화</strong>
+            <span id="syncStatus">이 브라우저에서 활성</span>
+          </div>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">2026학년도 1학기</p>
+            <h1>시간표 교체 및 보강 운영</h1>
+          </div>
+          <div class="topbar-actions">
+            <label class="field compact">
+              <span>기준일</span>
+              <input id="selectedDate" type="date" value="2026-06-29" />
+            </label>
+            <label class="field compact">
+              <span>요일</span>
+              <select id="selectedDay"></select>
+            </label>
+            <button class="primary-button" id="newRequestBtn" type="button">
+              <span aria-hidden="true">＋</span>
+              요청 등록
+            </button>
+          </div>
+        </header>
+
+        <section class="metrics" aria-label="운영 현황">
+          <article class="metric">
+            <span>대기 요청</span>
+            <strong id="pendingCount">0</strong>
+          </article>
+          <article class="metric">
+            <span>승인 교체</span>
+            <strong id="approvedCount">0</strong>
+          </article>
+          <article class="metric">
+            <span>보강 필요</span>
+            <strong id="coverageCount">0</strong>
+          </article>
+          <article class="metric">
+            <span>충돌 감지</span>
+            <strong id="conflictCount">0</strong>
+          </article>
+        </section>
+
+        <section class="content-grid">
+          <div class="schedule-panel">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Live Schedule</p>
+                <h2>교사별 시간표</h2>
+              </div>
+              <div class="segmented" role="tablist" aria-label="학년 필터">
+                <button class="active" type="button" data-grade="all">전체</button>
+                <button type="button" data-grade="1">1학년</button>
+                <button type="button" data-grade="2">2학년</button>
+                <button type="button" data-grade="3">3학년</button>
+              </div>
+            </div>
+            <div class="schedule-wrap">
+              <table class="schedule-table" id="scheduleTable">
+                <caption>교사별 수업 시간표</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">교사</th>
+                    <th scope="col">1교시</th>
+                    <th scope="col">2교시</th>
+                    <th scope="col">3교시</th>
+                    <th scope="col">4교시</th>
+                    <th scope="col">5교시</th>
+                    <th scope="col">6교시</th>
+                    <th scope="col">7교시</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <aside class="right-rail">
+            <section class="tool-panel" aria-labelledby="swapTitle">
+              <div class="section-heading tight">
+                <div>
+                  <p class="eyebrow">Request</p>
+                  <h2 id="swapTitle">교체 요청</h2>
+                </div>
+              </div>
+              <form id="swapForm" class="form-grid">
+                <label class="field">
+                  <span>요청 교사</span>
+                  <select id="fromTeacher" required></select>
+                </label>
+                <label class="field">
+                  <span>대상 교사</span>
+                  <select id="toTeacher" required></select>
+                </label>
+                <label class="field half">
+                  <span>교시</span>
+                  <select id="period" required></select>
+                </label>
+                <label class="field half">
+                  <span>유형</span>
+                  <select id="requestType" required>
+                    <option value="swap">교체</option>
+                    <option value="coverage">보강</option>
+                  </select>
+                </label>
+                <label class="field full">
+                  <span>사유</span>
+                  <textarea id="reason" rows="3" placeholder="출장, 연수, 병가 등"></textarea>
+                </label>
+                <button class="primary-button full" type="submit">요청 저장</button>
+              </form>
+            </section>
+
+            <section class="tool-panel" aria-labelledby="activityTitle">
+              <div class="section-heading tight">
+                <div>
+                  <p class="eyebrow">Activity</p>
+                  <h2 id="activityTitle">최근 변경</h2>
+                </div>
+              </div>
+              <ol class="activity-list" id="activityList"></ol>
+            </section>
+          </aside>
+        </section>
+
+        <section class="request-board" aria-labelledby="requestTitle">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Approval Flow</p>
+              <h2 id="requestTitle">요청 처리 현황</h2>
+            </div>
+            <button class="ghost-button" id="resetDemoBtn" type="button">데모 초기화</button>
+          </div>
+          <div class="request-columns" id="requestColumns"></div>
+        </section>
+      </main>
+    </div>
+
+    <template id="requestCardTemplate">
+      <article class="request-card">
+        <div class="request-top">
+          <strong></strong>
+          <span></span>
+        </div>
+        <p></p>
+        <div class="request-meta"></div>
+        <div class="request-actions"></div>
+      </article>
+    </template>
+
+    <script src="timetable-data.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
