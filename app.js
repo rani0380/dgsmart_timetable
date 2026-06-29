@@ -1,6 +1,7 @@
 const STORAGE_KEY = "dgsmart-timetable-hub-v2";
 const channel = "BroadcastChannel" in window ? new BroadcastChannel("dgsmart-timetable-hub") : null;
 const sourceData = window.TIMETABLE_DATA || { teachers: [], schedules: [] };
+const sheetWebAppUrl = window.TIMETABLE_CONFIG?.googleSheetWebAppUrl?.trim() || "";
 
 const teachers = sourceData.teachers.map((teacher) => ({
   id: teacher.id,
@@ -72,6 +73,7 @@ els.swapForm.addEventListener("submit", (event) => {
   pushActivity(`${teacherName(request.fromTeacher)} 교사가 ${teacherName(request.toTeacher)} 교사에게 ${request.day}요일 ${request.period}교시 ${typeLabel(request.type)}를 요청했습니다.`);
   els.reason.value = "";
   persistAndRender();
+  appendRequestToGoogleSheet(request);
 });
 
 els.selectedDate.addEventListener("change", () => {
@@ -329,6 +331,47 @@ function pushActivity(text) {
   state.activity = state.activity.slice(0, 30);
 }
 
+async function appendRequestToGoogleSheet(request) {
+  if (!sheetWebAppUrl) {
+    showSync("구글 시트 URL 미설정");
+    return;
+  }
+
+  const baseLesson = getBaseLesson(request.fromTeacher, request.day, request.period);
+  const payload = {
+    requestId: request.id,
+    requestDate: state.selectedDate,
+    day: request.day,
+    period: request.period,
+    type: request.type,
+    typeLabel: typeLabel(request.type),
+    status: request.status,
+    fromTeacher: teacherName(request.fromTeacher),
+    fromSubject: teacherSubject(request.fromTeacher),
+    toTeacher: teacherName(request.toTeacher),
+    toSubject: teacherSubject(request.toTeacher),
+    originalClass: baseLesson.className,
+    originalLesson: baseLesson.title,
+    reason: request.reason,
+    createdAt: new Date(request.createdAt).toISOString(),
+    userAgent: navigator.userAgent,
+  };
+
+  try {
+    await fetch(sheetWebAppUrl, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload),
+    });
+    pushActivity("구글 시트로 요청 데이터를 전송했습니다.");
+    persistAndRender();
+  } catch (error) {
+    pushActivity("구글 시트 전송에 실패했습니다. 로컬에는 저장되어 있습니다.");
+    persistAndRender();
+  }
+}
+
 function persistAndRender() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   channel?.postMessage({ type: "state:update", state });
@@ -358,6 +401,10 @@ function normalizeState(nextState) {
 
 function teacherName(id) {
   return teachers.find((teacher) => teacher.id === id)?.name ?? "알 수 없음";
+}
+
+function teacherSubject(id) {
+  return teachers.find((teacher) => teacher.id === id)?.subject ?? "";
 }
 
 function typeLabel(type) {

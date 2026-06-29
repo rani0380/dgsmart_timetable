@@ -11,7 +11,7 @@ window.TIMETABLE_DATA = {
     {
       "id": "t22",
       "name": "지현아",
-      "subject": "??",
+      "subject": "국어",
       "column": 22
     },
     {
@@ -23,7 +23,7 @@ window.TIMETABLE_DATA = {
     {
       "id": "t24",
       "name": "윤승민",
-      "subject": "??",
+      "subject": "수학",
       "column": 24
     },
     {
@@ -35,13 +35,13 @@ window.TIMETABLE_DATA = {
     {
       "id": "t26",
       "name": "은영주",
-      "subject": "??",
+      "subject": "영어",
       "column": 26
     },
     {
       "id": "t27",
       "name": "서주영",
-      "subject": "??",
+      "subject": "영어",
       "column": 27
     },
     {
@@ -77,13 +77,13 @@ window.TIMETABLE_DATA = {
     {
       "id": "t33",
       "name": "김강현",
-      "subject": "??",
+      "subject": "체육",
       "column": 33
     },
     {
       "id": "t34",
       "name": "김건우",
-      "subject": "??",
+      "subject": "체육",
       "column": 34
     },
     {
@@ -107,103 +107,103 @@ window.TIMETABLE_DATA = {
     {
       "id": "t38",
       "name": "한인섭",
-      "subject": "정 밀 기 계 과",
+      "subject": "정밀기계과",
       "column": 38
     },
     {
       "id": "t39",
       "name": "이상목",
-      "subject": "??",
+      "subject": "정밀기계과",
       "column": 39
     },
     {
       "id": "t40",
       "name": "안승득",
-      "subject": "??",
+      "subject": "정밀기계과",
       "column": 40
     },
     {
       "id": "t41",
       "name": "전영욱",
-      "subject": "??",
+      "subject": "정밀기계과",
       "column": 41
     },
     {
       "id": "t42",
       "name": "이학수",
-      "subject": "??",
+      "subject": "정밀기계과",
       "column": 42
     },
     {
       "id": "t43",
       "name": "정하륜",
-      "subject": "??",
+      "subject": "정밀기계과",
       "column": 43
     },
     {
       "id": "t44",
       "name": "이진규",
-      "subject": "??",
+      "subject": "정밀기계과",
       "column": 44
     },
     {
       "id": "t45",
       "name": "함윤형",
-      "subject": "??",
+      "subject": "정밀기계과",
       "column": 45
     },
     {
       "id": "t46",
       "name": "백두산",
-      "subject": "??",
+      "subject": "정밀기계과",
       "column": 46
     },
     {
       "id": "t47",
       "name": "김영남",
-      "subject": "??",
+      "subject": "정밀기계과",
       "column": 47
     },
     {
       "id": "t48",
       "name": "김동원",
-      "subject": "자 동 화 기 계 과",
+      "subject": "자동화기계과",
       "column": 48
     },
     {
       "id": "t49",
       "name": "이도마",
-      "subject": "??",
+      "subject": "자동화기계과",
       "column": 49
     },
     {
       "id": "t50",
       "name": "이준우",
-      "subject": "??",
+      "subject": "자동화기계과",
       "column": 50
     },
     {
       "id": "t51",
       "name": "장여경",
-      "subject": "??",
+      "subject": "자동화기계과",
       "column": 51
     },
     {
       "id": "t52",
       "name": "최지웅",
-      "subject": "??",
+      "subject": "자동화기계과",
       "column": 52
     },
     {
       "id": "t53",
       "name": "박정용",
-      "subject": "??",
+      "subject": "자동화기계과",
       "column": 53
     },
     {
       "id": "t54",
       "name": "신세연",
-      "subject": "??",
+      "subject": "자동화기계과",
       "column": 54
     },
     {
@@ -215,19 +215,19 @@ window.TIMETABLE_DATA = {
     {
       "id": "t56",
       "name": "김창훈",
-      "subject": "??",
+      "subject": "소프트웨어과",
       "column": 56
     },
     {
       "id": "t57",
       "name": "박애란",
-      "subject": "??",
+      "subject": "소프트웨어과",
       "column": 57
     },
     {
       "id": "t58",
       "name": "도미영",
-      "subject": "??",
+      "subject": "소프트웨어과",
       "column": 58
     }
   ],
