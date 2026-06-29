@@ -143,6 +143,15 @@ document.querySelectorAll("[data-view]").forEach((button) => {
   });
 });
 
+document.querySelectorAll("[data-metric]").forEach((metric) => {
+  metric.addEventListener("click", () => handleMetricAction(metric.dataset.metric));
+  metric.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    handleMetricAction(metric.dataset.metric);
+  });
+});
+
 window.addEventListener("storage", (event) => {
   if (event.key !== STORAGE_KEY || !event.newValue) return;
   state = normalizeState(JSON.parse(event.newValue));
@@ -283,6 +292,7 @@ function renderRequests() {
   for (const [status, label] of groups) {
     const column = document.createElement("section");
     column.className = "request-column";
+    column.dataset.status = status;
     column.append(makeText("h3", label));
     const cards = state.requests.filter((request) => request.status === status);
     if (!cards.length) {
@@ -300,6 +310,8 @@ function renderRequests() {
 function createRequestCard(request) {
   const template = document.querySelector("#requestCardTemplate");
   const card = template.content.firstElementChild.cloneNode(true);
+  card.dataset.status = request.status;
+  card.dataset.requestType = request.type;
   card.querySelector("strong").textContent = `${teacherName(request.fromTeacher)} → ${teacherName(request.toTeacher)}`;
   card.querySelector(".request-top span").textContent = typeLabel(request.type);
   card.querySelector("p").textContent = request.reason;
@@ -347,10 +359,67 @@ function renderLessonPreview(kind) {
 function renderMetrics() {
   const dayRequests = state.requests.filter((request) => request.day === state.selectedDay);
   const approved = dayRequests.filter((request) => request.status === "approved");
-  els.pendingCount.textContent = dayRequests.filter((request) => request.status === "pending").length;
-  els.approvedCount.textContent = approved.length;
-  els.coverageCount.textContent = dayRequests.filter((request) => request.type === "coverage" && request.status !== "approved").length;
-  els.conflictCount.textContent = detectConflicts(approved).size;
+  const counts = {
+    pending: dayRequests.filter((request) => request.status === "pending").length,
+    approved: approved.length,
+    coverage: dayRequests.filter((request) => request.type === "coverage" && request.status !== "approved").length,
+    conflict: detectConflicts(approved).size,
+  };
+
+  els.pendingCount.textContent = counts.pending;
+  els.approvedCount.textContent = counts.approved;
+  els.coverageCount.textContent = counts.coverage;
+  els.conflictCount.textContent = counts.conflict;
+
+  document.querySelectorAll("[data-metric]").forEach((metric) => {
+    metric.classList.toggle("empty", counts[metric.dataset.metric] === 0);
+  });
+}
+
+function handleMetricAction(metric) {
+  const actions = {
+    pending: () => scrollToRequestColumn("pending", "대기 요청이 없습니다."),
+    approved: () => scrollToRequestColumn("approved", "승인된 교체가 없습니다."),
+    coverage: () => scrollToCoverageRequest(),
+    conflict: () => scrollToConflict(),
+  };
+  actions[metric]?.();
+}
+
+function scrollToRequestColumn(status, emptyMessage) {
+  const column = document.querySelector(`.request-column[data-status="${status}"]`);
+  if (!column) return;
+  column.scrollIntoView({ behavior: "smooth", block: "center" });
+  flashElement(column);
+  if (!column.querySelector(".request-card")) showSync(emptyMessage);
+}
+
+function scrollToCoverageRequest() {
+  const card = document.querySelector('.request-card[data-request-type="coverage"]:not([data-status="approved"])');
+  if (card) {
+    card.scrollIntoView({ behavior: "smooth", block: "center" });
+    flashElement(card);
+    return;
+  }
+  scrollToRequestColumn("pending", "보강 필요 요청이 없습니다.");
+}
+
+function scrollToConflict() {
+  const conflict = document.querySelector(".lesson.conflict");
+  if (!conflict) {
+    document.querySelector(".schedule-panel").scrollIntoView({ behavior: "smooth", block: "start" });
+    showSync("감지된 충돌이 없습니다.");
+    return;
+  }
+  conflict.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+  flashElement(conflict);
+}
+
+function flashElement(element) {
+  element.classList.remove("focus-flash");
+  void element.offsetWidth;
+  element.classList.add("focus-flash");
+  window.setTimeout(() => element.classList.remove("focus-flash"), 1400);
 }
 
 function buildLesson(teacherId, period, approved) {

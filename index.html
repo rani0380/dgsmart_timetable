@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>교원 시간표 교체 및 보강</title>
-    <link rel="stylesheet" href="styles.css?v=20260728-12" />
+    <link rel="stylesheet" href="styles.css?v=20260728-13" />
   </head>
   <body>
     <div class="app-shell">
@@ -54,19 +54,19 @@
         </header>
 
         <section class="metrics" aria-label="운영 현황">
-          <article class="metric">
+          <article class="metric" role="button" tabindex="0" data-metric="pending" aria-label="대기 요청 보기">
             <span>대기 요청</span>
             <strong id="pendingCount">0</strong>
           </article>
-          <article class="metric">
+          <article class="metric" role="button" tabindex="0" data-metric="approved" aria-label="승인 교체 보기">
             <span>승인 교체</span>
             <strong id="approvedCount">0</strong>
           </article>
-          <article class="metric">
+          <article class="metric" role="button" tabindex="0" data-metric="coverage" aria-label="보강 필요 보기">
             <span>보강 필요</span>
             <strong id="coverageCount">0</strong>
           </article>
-          <article class="metric">
+          <article class="metric" role="button" tabindex="0" data-metric="conflict" aria-label="충돌 감지 보기">
             <span>충돌 감지</span>
             <strong id="conflictCount">0</strong>
           </article>
@@ -213,8 +213,8 @@
       </article>
     </template>
 
-    <script src="config.js?v=20260728-12"></script>
-    <script src="timetable-data.js?v=20260728-12"></script>
-    <script src="app.js?v=20260728-12"></script>
+    <script src="config.js?v=20260728-13"></script>
+    <script src="timetable-data.js?v=20260728-13"></script>
+    <script src="app.js?v=20260728-13"></script>
   </body>
 </html>
