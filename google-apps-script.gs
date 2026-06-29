@@ -4,7 +4,7 @@ const ADMIN_EMAILS = ["담당자이메일@example.com"];
 
 function doPost(e) {
   const sheet = getSheet_();
-  const data = JSON.parse(e.postData.contents || "{}");
+  const data = parseRequest_(e);
 
   sheet.appendRow([
     new Date(),
@@ -29,6 +29,37 @@ function doPost(e) {
   return ContentService
     .createTextOutput(JSON.stringify({ ok: true }))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+function parseRequest_(e) {
+  if (!e) {
+    return {
+      requestId: "MANUAL-" + new Date().getTime(),
+      requestDate: "2026-06-29",
+      day: "월",
+      period: "",
+      typeLabel: "수동실행",
+      status: "manual",
+      fromTeacher: "Apps Script",
+      fromSubject: "",
+      toTeacher: "직접 doPost 실행",
+      toSubject: "",
+      originalClass: "",
+      originalLesson: "",
+      reason: "doPost를 직접 실행했습니다. 실제 테스트는 testAppendRequest_ 함수를 실행하세요.",
+      userAgent: "Apps Script manual run",
+    };
+  }
+
+  if (e.parameter && e.parameter.payload) {
+    return JSON.parse(e.parameter.payload);
+  }
+
+  if (e.postData && e.postData.contents) {
+    return JSON.parse(e.postData.contents);
+  }
+
+  return {};
 }
 
 function doGet() {

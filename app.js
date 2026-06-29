@@ -357,19 +357,36 @@ async function appendRequestToGoogleSheet(request) {
     userAgent: navigator.userAgent,
   };
 
-  try {
-    await fetch(sheetWebAppUrl, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(payload),
-    });
-    pushActivity("구글 시트로 요청 데이터 전송을 시도했습니다.");
-    persistAndRender();
-  } catch (error) {
-    pushActivity("구글 시트 전송에 실패했습니다. 로컬에는 저장되어 있습니다.");
-    persistAndRender();
+  submitToGoogleSheet(payload);
+  pushActivity("구글 시트로 요청 데이터 전송을 시도했습니다.");
+  persistAndRender();
+}
+
+function submitToGoogleSheet(payload) {
+  const iframeName = "google-sheet-submit-frame";
+  let iframe = document.querySelector(`iframe[name="${iframeName}"]`);
+  if (!iframe) {
+    iframe = document.createElement("iframe");
+    iframe.name = iframeName;
+    iframe.hidden = true;
+    document.body.append(iframe);
   }
+
+  const form = document.createElement("form");
+  form.action = sheetWebAppUrl;
+  form.method = "POST";
+  form.target = iframeName;
+  form.style.display = "none";
+
+  const input = document.createElement("input");
+  input.type = "hidden";
+  input.name = "payload";
+  input.value = JSON.stringify(payload);
+  form.append(input);
+
+  document.body.append(form);
+  form.submit();
+  form.remove();
 }
 
 function persistAndRender() {
