@@ -40,6 +40,8 @@ const els = {
   fromPeriod: document.querySelector("#fromPeriod"),
   toDay: document.querySelector("#toDay"),
   toPeriod: document.querySelector("#toPeriod"),
+  fromLessonPreview: document.querySelector("#fromLessonPreview"),
+  toLessonPreview: document.querySelector("#toLessonPreview"),
   requestType: document.querySelector("#requestType"),
   reason: document.querySelector("#reason"),
   swapForm: document.querySelector("#swapForm"),
@@ -92,6 +94,14 @@ els.selectedDate.addEventListener("change", () => {
 els.selectedDay.addEventListener("change", () => {
   state.selectedDay = els.selectedDay.value;
   render();
+});
+
+[els.fromTeacher, els.fromDay, els.fromPeriod].forEach((element) => {
+  element.addEventListener("change", () => renderLessonPreview("from"));
+});
+
+[els.toTeacher, els.toDay, els.toPeriod].forEach((element) => {
+  element.addEventListener("change", () => renderLessonPreview("to"));
 });
 
 els.newRequestBtn.addEventListener("click", () => {
@@ -165,6 +175,8 @@ function hydrateControls() {
   }
 
   if (teachers.length > 1) els.toTeacher.selectedIndex = 1;
+  renderLessonPreview("from");
+  renderLessonPreview("to");
 }
 
 function render() {
@@ -261,6 +273,23 @@ function renderActivity() {
     li.append(makeText("strong", item.text), makeText("span", relativeTime(item.at)));
     els.activityList.append(li);
   }
+}
+
+function renderLessonPreview(kind) {
+  const isFrom = kind === "from";
+  const teacherId = isFrom ? els.fromTeacher.value : els.toTeacher.value;
+  const day = isFrom ? els.fromDay.value : els.toDay.value;
+  const period = Number(isFrom ? els.fromPeriod.value : els.toPeriod.value);
+  const target = isFrom ? els.fromLessonPreview : els.toLessonPreview;
+  const lesson = getBaseLesson(teacherId, day, period);
+  const teacher = teachers.find((item) => item.id === teacherId);
+  const subject = teacher?.subject || "교과";
+  const title = lesson.status === "open" ? "공강" : `${subject} · ${lesson.title}`;
+  const meta = lesson.className ? `${day}요일 ${period}교시 · ${lesson.className}` : `${day}요일 ${period}교시`;
+
+  target.classList.toggle("open", lesson.status === "open");
+  target.classList.toggle("busy", lesson.status !== "open");
+  target.innerHTML = `<strong>${title}</strong><span>${meta}</span>`;
 }
 
 function renderMetrics() {

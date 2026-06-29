@@ -462,6 +462,39 @@ button {
   display: block;
 }
 
+.lesson-preview {
+  border-left: 4px solid var(--blue);
+  border-radius: 8px;
+  padding: 9px 11px;
+  background: #dbeafe;
+  box-shadow: inset 0 0 0 1px #b9cdf8;
+  color: #073b7a;
+}
+
+.lesson-preview.open {
+  border-left-color: #14804a;
+  background: #dcfce7;
+  box-shadow: inset 0 0 0 1px #9ee6b7;
+  color: #065f32;
+}
+
+.lesson-preview strong,
+.lesson-preview span {
+  display: block;
+}
+
+.lesson-preview strong {
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.lesson-preview span {
+  color: currentColor;
+  font-size: 12px;
+  opacity: 0.72;
+  margin-top: 3px;
+}
+
 .field.compact {
   min-width: 140px;
 }
