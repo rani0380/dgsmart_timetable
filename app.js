@@ -568,9 +568,7 @@ function buildPrintApplicationHtml(request) {
     <div class="line">
       <span class="line-label">일&nbsp;&nbsp;시:</span>
       ${dateParts.year}년 ${dateParts.month}월 ${dateParts.day}일 (${escapeHtml(fromDay)})요일
-      ${escapeHtml(String(fromPeriod))}교시부터 -
-      ${dateParts.year}년 ${dateParts.month}월 ${dateParts.day}일 (${escapeHtml(toDay)})요일
-      ${escapeHtml(String(toPeriod))}교시까지
+      ${escapeHtml(String(fromPeriod))}교시
     </div>
     <div class="line"><span class="line-label">사&nbsp;&nbsp;유:</span> ${escapeHtml(request.reason || "")}</div>
     <div class="line">위와 같은 사유에 의해 아래 내용과 같이 <strong>( ${escapeHtml(requestType)} )수업</strong>을 신청하오니 허가를 바랍니다.</div>
