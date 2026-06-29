@@ -21,6 +21,9 @@ const initialState = {
   gradeFilter: "all",
   requests: [],
   activity: [],
+  planner: {
+    entries: [],
+  },
 };
 
 let state = normalizeState(loadState());
@@ -50,6 +53,18 @@ const els = {
   syncStatus: document.querySelector("#syncStatus"),
   newRequestBtn: document.querySelector("#newRequestBtn"),
   resetDemoBtn: document.querySelector("#resetDemoBtn"),
+  plannerForm: document.querySelector("#plannerForm"),
+  plannerTeacher: document.querySelector("#plannerTeacher"),
+  plannerDay: document.querySelector("#plannerDay"),
+  plannerPeriod: document.querySelector("#plannerPeriod"),
+  plannerClass: document.querySelector("#plannerClass"),
+  plannerSubject: document.querySelector("#plannerSubject"),
+  plannerLesson: document.querySelector("#plannerLesson"),
+  plannerTableBody: document.querySelector("#plannerTable tbody"),
+  plannerEntryCount: document.querySelector("#plannerEntryCount"),
+  plannerConflictCount: document.querySelector("#plannerConflictCount"),
+  plannerExportBtn: document.querySelector("#plannerExportBtn"),
+  plannerResetBtn: document.querySelector("#plannerResetBtn"),
 };
 
 hydrateControls();
@@ -116,6 +131,32 @@ els.resetDemoBtn.addEventListener("click", () => {
   persistAndRender();
 });
 
+els.plannerForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  state.planner.entries.unshift({
+    id: crypto.randomUUID(),
+    teacherId: els.plannerTeacher.value,
+    day: els.plannerDay.value,
+    period: Number(els.plannerPeriod.value),
+    className: els.plannerClass.value.trim(),
+    subjectName: els.plannerSubject.value.trim(),
+    lessonName: els.plannerLesson.value.trim(),
+    createdAt: Date.now(),
+  });
+  els.plannerSubject.value = "";
+  els.plannerLesson.value = "";
+  persistAndRender();
+  showSync("2학기 시간표 배치 추가됨");
+});
+
+els.plannerResetBtn.addEventListener("click", () => {
+  if (!confirm("2학기 설계 데이터를 모두 삭제할까요?")) return;
+  state.planner.entries = [];
+  persistAndRender();
+});
+
+els.plannerExportBtn.addEventListener("click", exportPlannerCsv);
+
 document.querySelectorAll("[data-grade]").forEach((button) => {
   button.addEventListener("click", () => {
     state.gradeFilter = button.dataset.grade;
@@ -132,6 +173,7 @@ document.querySelectorAll("[data-view]").forEach((button) => {
       requests: ".request-board",
       coverage: ".right-rail",
       audit: "#activityTitle",
+      planner: "#plannerTitle",
     }[button.dataset.view];
     document.querySelector(target).scrollIntoView({ behavior: "smooth", block: "start" });
   });
@@ -169,6 +211,7 @@ function hydrateControls() {
     els.selectedDay.append(new Option(`${day}요일`, day));
     els.fromDay.append(new Option(`${day}요일`, day));
     els.toDay.append(new Option(`${day}요일`, day));
+    els.plannerDay.append(new Option(`${day}요일`, day));
   }
   els.selectedDay.value = state.selectedDay;
   els.fromDay.value = state.selectedDay;
@@ -178,14 +221,17 @@ function hydrateControls() {
     const label = `${teacher.name} (${teacher.subject})`;
     els.fromTeacher.append(new Option(label, teacher.id));
     els.toTeacher.append(new Option(label, teacher.id));
+    els.plannerTeacher.append(new Option(label, teacher.id));
   }
 
   for (let period = 1; period <= 7; period += 1) {
     els.fromPeriod.append(new Option(`${period}교시`, period));
     els.toPeriod.append(new Option(`${period}교시`, period));
+    els.plannerPeriod.append(new Option(`${period}교시`, period));
   }
 
   if (teachers.length > 1) els.toTeacher.selectedIndex = 1;
+  els.plannerDay.value = state.selectedDay;
   renderLessonPreview("from");
   renderLessonPreview("to");
 }
@@ -200,6 +246,7 @@ function render() {
   renderRequests();
   renderActivity();
   renderMetrics();
+  renderPlanner();
 }
 
 function renderSchedule() {
@@ -414,6 +461,114 @@ function flashElement(element) {
   void element.offsetWidth;
   element.classList.add("focus-flash");
   window.setTimeout(() => element.classList.remove("focus-flash"), 1400);
+}
+
+function renderPlanner() {
+  const entries = state.planner.entries;
+  const conflicts = detectPlannerConflicts(entries);
+  els.plannerTableBody.replaceChildren();
+
+  for (let period = 1; period <= 7; period += 1) {
+    const row = document.createElement("tr");
+    const periodCell = document.createElement("th");
+    periodCell.scope = "row";
+    periodCell.textContent = `${period}교시`;
+    row.append(periodCell);
+
+    for (const day of days.slice(0, 5)) {
+      const cell = document.createElement("td");
+      const slotEntries = entries.filter((entry) => entry.day === day && entry.period === period);
+      if (!slotEntries.length) {
+        const empty = document.createElement("span");
+        empty.className = "planner-empty";
+        empty.textContent = "미배치";
+        cell.append(empty);
+      }
+      for (const entry of slotEntries) {
+        cell.append(createPlannerAssignment(entry, conflicts));
+      }
+      row.append(cell);
+    }
+
+    els.plannerTableBody.append(row);
+  }
+
+  els.plannerEntryCount.textContent = entries.length;
+  els.plannerConflictCount.textContent = conflicts.size;
+}
+
+function createPlannerAssignment(entry, conflicts) {
+  const item = document.createElement("div");
+  item.className = "planner-assignment";
+  if (conflicts.has(entry.id)) item.classList.add("conflict");
+
+  const title = makeText("strong", `${entry.className} · ${entry.subjectName || entry.lessonName}`);
+  const detail = entry.lessonName ? `${entry.lessonName} · ${teacherName(entry.teacherId)}` : teacherName(entry.teacherId);
+  const meta = makeText("span", detail);
+  const remove = document.createElement("button");
+  remove.type = "button";
+  remove.textContent = "삭제";
+  remove.addEventListener("click", () => removePlannerEntry(entry.id));
+
+  item.append(title, meta, remove);
+  return item;
+}
+
+function detectPlannerConflicts(entries) {
+  const conflicts = new Set();
+  const teacherSlots = new Map();
+  const classSlots = new Map();
+
+  for (const entry of entries) {
+    const teacherKey = `${entry.teacherId}-${entry.day}-${entry.period}`;
+    const classKey = `${entry.className}-${entry.day}-${entry.period}`;
+    markPlannerConflict(teacherSlots, teacherKey, entry.id, conflicts);
+    markPlannerConflict(classSlots, classKey, entry.id, conflicts);
+  }
+
+  return conflicts;
+}
+
+function markPlannerConflict(map, key, id, conflicts) {
+  if (!key || key.startsWith("-")) return;
+  if (map.has(key)) {
+    conflicts.add(map.get(key));
+    conflicts.add(id);
+    return;
+  }
+  map.set(key, id);
+}
+
+function removePlannerEntry(id) {
+  state.planner.entries = state.planner.entries.filter((entry) => entry.id !== id);
+  persistAndRender();
+}
+
+function exportPlannerCsv() {
+  const header = ["요일", "교시", "학반", "교과목", "수업명/비고", "교사"];
+  const rows = state.planner.entries
+    .slice()
+    .sort((a, b) => `${a.day}${a.period}${a.className}`.localeCompare(`${b.day}${b.period}${b.className}`))
+    .map((entry) => [
+      entry.day,
+      `${entry.period}교시`,
+      entry.className,
+      entry.subjectName || "",
+      entry.lessonName,
+      teacherName(entry.teacherId),
+    ]);
+  const csv = [header, ...rows].map((row) => row.map(escapeCsv).join(",")).join("\n");
+  const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "2026_2학기_시간표_설계.csv";
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function escapeCsv(value) {
+  return `"${String(value ?? "").replaceAll('"', '""')}"`;
 }
 
 function buildLesson(teacherId, period, approved) {
@@ -742,6 +897,15 @@ function normalizeState(nextState) {
   const activity = Array.isArray(nextState?.activity)
     ? nextState.activity.filter((entry) => !isDataLoadActivity(entry))
     : initialState.activity;
+  const plannerEntries = Array.isArray(nextState?.planner?.entries)
+    ? nextState.planner.entries.map((entry) => ({
+        ...entry,
+        id: entry.id || crypto.randomUUID(),
+        subjectName: entry.subjectName || entry.lessonName || "",
+        lessonName: entry.subjectName ? entry.lessonName || "" : "",
+        period: Number(entry.period || 1),
+      }))
+    : [];
 
   return {
     ...structuredClone(initialState),
@@ -749,6 +913,9 @@ function normalizeState(nextState) {
     selectedDay: days.includes(nextState?.selectedDay) ? nextState.selectedDay : defaultDay,
     requests,
     activity,
+    planner: {
+      entries: plannerEntries,
+    },
   };
 }
 
