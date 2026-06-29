@@ -481,20 +481,20 @@ function buildPrintApplicationHtml(request) {
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
-  <title>수업 교체 및 결·보강 신청서</title>
+  <title>수업 교체 및 결․보강 신청서</title>
   <style>
     @page { size: A4 portrait; margin: 12mm; }
     * { box-sizing: border-box; }
     body { margin: 0; color: #000; font-family: "Malgun Gothic", "맑은 고딕", sans-serif; font-size: 12px; }
     .paper { width: 186mm; margin: 0 auto; }
-    h1 { margin: 10mm 0 6mm; text-align: center; font-size: 24px; letter-spacing: 4px; }
+    h1 { margin: 10mm 0 6mm; text-align: center; font-size: 24px; letter-spacing: 3px; }
     .approval { display: grid; grid-template-columns: 1fr 60mm; align-items: start; margin-bottom: 8mm; }
     .approval table, .main-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
     th, td { border: 1px solid #000; height: 8mm; padding: 1.5mm; text-align: center; vertical-align: middle; }
     .approval th { height: 7mm; font-weight: 700; }
     .approval td { height: 16mm; }
     .line { margin: 3mm 0; line-height: 1.8; }
-    .reason { min-height: 9mm; border-bottom: 1px solid #000; padding-left: 4mm; }
+    .line-label { display: inline-block; min-width: 13mm; font-weight: 700; }
     .center-line { margin: 4mm 0 5mm; text-align: center; line-height: 2; }
     .teacher-sign { text-align: right; padding-right: 10mm; }
     .main-table th { height: 8mm; font-weight: 700; }
@@ -508,41 +508,42 @@ function buildPrintApplicationHtml(request) {
 </head>
 <body>
   <div class="paper">
-    <h1>수업 교체 및 결·보강 신청서</h1>
+    <h1>수업 교체 및 결․보강 신청서</h1>
     <div class="approval">
       <div></div>
       <table aria-label="결재란">
-        <tr><th>계</th><th>교무</th><th>교감</th></tr>
+        <tr><th>계</th><th>교 무</th><th>교 감</th></tr>
         <tr><td></td><td></td><td></td></tr>
       </table>
     </div>
     <div class="line">
-      일시: ${dateParts.year}년 ${dateParts.month}월 ${dateParts.day}일 (${escapeHtml(fromDay)})요일
+      <span class="line-label">일&nbsp;&nbsp;시:</span>
+      ${dateParts.year}년 ${dateParts.month}월 ${dateParts.day}일 (${escapeHtml(fromDay)})요일
       ${escapeHtml(String(fromPeriod))}교시부터 -
       ${dateParts.year}년 ${dateParts.month}월 ${dateParts.day}일 (${escapeHtml(toDay)})요일
       ${escapeHtml(String(toPeriod))}교시까지
     </div>
-    <div class="line">사유: <span>${escapeHtml(request.reason || "")}</span></div>
-    <div class="line">위와 같은 사유에 의해 아래 내용과 같이 <strong>${escapeHtml(requestType)} 수업</strong>을 신청하오니 허가를 바랍니다.</div>
+    <div class="line"><span class="line-label">사&nbsp;&nbsp;유:</span> ${escapeHtml(request.reason || "")}</div>
+    <div class="line">위와 같은 사유에 의해 아래 내용과 같이 <strong>( ${escapeHtml(requestType)} )수업</strong>을 신청하오니 허가를 바랍니다.</div>
     <div class="center-line">
       ${dateParts.year}년&nbsp;&nbsp;&nbsp;&nbsp;${dateParts.month}월&nbsp;&nbsp;&nbsp;&nbsp;${dateParts.day}일
       <div class="teacher-sign">교사: ${escapeHtml(teacherName(request.fromTeacher))} &nbsp;&nbsp;&nbsp;&nbsp; (인)</div>
     </div>
     <table class="main-table" aria-label="수업 교체 및 보강 신청 내용">
       <colgroup>
-        <col span="7" />
+        <col span="6" />
         <col span="6" />
         <col span="2" />
       </colgroup>
       <tr>
-        <th class="section-title" colspan="7">(결강, 교체) 신청 수업</th>
+        <th class="section-title" colspan="6">( 결강, 교체 ) 신청 수업</th>
         <th class="section-title" colspan="6">교체 수업</th>
         <th class="section-title" colspan="2">보강수업</th>
       </tr>
       <tr>
-        <th class="small">월/일</th><th class="small">요일</th><th class="small">학반</th><th class="small">교시</th><th class="small">교과목</th><th class="small">수업교사</th><th class="small">확인</th>
-        <th class="small">월/일</th><th class="small">요일</th><th class="small">교시</th><th class="small">교과목</th><th class="small">교사</th><th class="small">확인</th>
-        <th class="small">교사</th><th class="small">확인</th>
+        <th class="small">월/일</th><th class="small">요일</th><th class="small">학반</th><th class="small">교시</th><th class="small">교과목</th><th class="small">수업교사</th>
+        <th class="small">월/일</th><th class="small">요일</th><th class="small">교시</th><th class="small">교과목</th><th class="small">교사</th><th class="small">(인)</th>
+        <th class="small">교사</th><th class="small">(인)</th>
       </tr>
       ${combinePrintRows(fromRow, isCoverage ? buildPrintRow({}) : toRow, isCoverage ? toRow : buildPrintRow({}))}
       ${blankRows}
@@ -572,7 +573,6 @@ function combinePrintRows(fromRow, swapRow, coverageRow) {
     <td>${escapeHtml(String(fromRow.period || ""))}</td>
     <td>${escapeHtml(fromRow.subject)}</td>
     <td>${escapeHtml(fromRow.teacher)}</td>
-    <td></td>
     <td>${escapeHtml(swapRow.date)}</td>
     <td>${escapeHtml(swapRow.day)}</td>
     <td>${escapeHtml(String(swapRow.period || ""))}</td>
