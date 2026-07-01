@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>교사별 주간 시간표</title>
+    <link rel="stylesheet" href="styles.css?v=20260702-01" />
+  </head>
+  <body class="weekly-page">
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="서비스 메뉴">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">T</span>
+          <div>
+            <strong>Timetable Hub</strong>
+            <span>교사별 주간 시간표</span>
+          </div>
+        </div>
+
+        <nav class="nav-list" aria-label="주요 화면">
+          <a class="nav-item" href="index.html">
+            <span aria-hidden="true">▦</span>
+            운영 보드
+          </a>
+          <a class="nav-item" href="planner.html">
+            <span aria-hidden="true">▦</span>
+            2학기 설계
+          </a>
+          <a class="nav-item active" href="weekly.html">
+            <span aria-hidden="true">▤</span>
+            교사별 주간표
+          </a>
+        </nav>
+
+        <div class="sync-box">
+          <span class="pulse" aria-hidden="true"></span>
+          <div>
+            <strong>주간표 보기</strong>
+            <span id="syncStatus">2학기 설계 데이터 기준</span>
+          </div>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar weekly-topbar">
+          <div>
+            <p class="eyebrow">2026학년도 2학기</p>
+            <h1>교사별 주간 시간표</h1>
+          </div>
+          <div class="weekly-tools">
+            <label class="field">
+              <span>교사 검색</span>
+              <input id="teacherSearch" type="search" placeholder="교사명 또는 교과" />
+            </label>
+            <label class="field">
+              <span>교사 선택</span>
+              <select id="teacherFilter"></select>
+            </label>
+            <button class="ghost-button" id="printWeeklyBtn" type="button">인쇄</button>
+          </div>
+        </header>
+
+        <section class="weekly-summary" aria-label="교사별 주간표 현황">
+          <article>
+            <span>표시 교사</span>
+            <strong id="visibleTeacherCount">0</strong>
+          </article>
+          <article>
+            <span>총 배치</span>
+            <strong id="totalEntryCount">0</strong>
+          </article>
+          <article>
+            <span>충돌</span>
+            <strong id="weeklyConflictCount">0</strong>
+          </article>
+        </section>
+
+        <section class="weekly-board" aria-labelledby="weeklyTitle">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Teacher Weekly View</p>
+              <h2 id="weeklyTitle">교사별 주간표</h2>
+            </div>
+            <a class="ghost-button" href="planner.html">시간표 설계로 이동</a>
+          </div>
+
+          <div id="weeklyGrid" class="weekly-grid"></div>
+          <p id="weeklyEmpty" class="weekly-empty" hidden>조건에 맞는 교사 또는 배치가 없습니다.</p>
+        </section>
+      </main>
+    </div>
+
+    <script src="timetable-data.js?v=20260702-01"></script>
+    <script src="weekly.js?v=20260702-01"></script>
+  </body>
+</html>
